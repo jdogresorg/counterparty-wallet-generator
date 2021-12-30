@@ -1,0 +1,102 @@
+<html>
+<head>
+    <title>Counterparty Wallet Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Counterparty Wallet Generator</h1>
+        <p>This is a tool which handles generating counterparty wallets in bulk and returning the first address of the wallet</p>
+        <div class="alert alert-info text-center">This tool was initially developed for the <a href="https://www.healthcoinplus.com/">HealthCoin+</a> project<br>If you use this tool and find it helpful, please consider making a Bitcoin donation to <a href="bitcoin:1JDogZS6tQcSxwfxhv6XKKjcyicYA4Feev">1JDogZS6tQcSxwfxhv6XKKjcyicYA4Feev</a></div>
+        <div class="alert alert-danger" id="error" style="display: none;"></div>
+        <form>
+        <div class="row form-group pb-2">
+            <div class="col-3"><label for="privkey">Network</label></div>
+            <div class="col-9">
+                <select class="form-control" name="network" id="network" required>
+                    <option value="mainnet">Bitcoin Mainnet</option>
+                    <option value="testnet">Bitcoin Testnet</option>
+                </select>
+            </div>
+        </div>
+        <div class="row form-group pb-2">
+            <div class="col-3"><label for="privkey"># Wallets</label></div>
+            <div class="col-9 "><input type="number" class="form-control" name="walletCount" id="walletCount" required min="1" max="1000" value="10"></div>
+        </div>
+        <div class="row form-group pb-2">
+            <div class="col-3"></div>
+            <div class="col-9"><button type="submit" class="btn btn-block btn-success btn-block">Generate Counterparty Wallets</button></div>
+        </div>
+        <div class="row form-group pb-3">
+            <div class="col-3"><label for="source">Status</label></div>
+            <div class="col-9"><input type="text" class="form-control" name="walletStatus" id="walletStatus" readonly></div>
+        </div>
+
+        <div class="border rounded p-2" id="walletList"></div>
+        </form>
+    </div>
+
+
+
+    <!-- Bitcoin / Bitcore includes -->
+    <script type="text/javascript" src="js/bitcore-lib.min.js"></script>
+    <script type="text/javascript" src="js/bitcore-message.min.js"></script>
+    <script type="text/javascript" src="js/util.bitcore.js"></script>
+    <script type="text/javascript" src="js/util.generic.js"></script>
+    <script type="text/javascript" src="js/mnemonic.js"></script>
+    <script type="text/javascript" src="js/counterparty-wallet-generator.js"></script>
+
+    <!-- Jquery / Bootstrap includes-->
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+    <!-- Main javascript code -->
+    <script>
+        $(document).ready(function(){
+
+            // Handle form submissions by processing the send
+            $('form').submit(function(e){
+                // Prevent actual form submission
+                e.preventDefault();
+
+                // Get form data and references to elements we will update
+                var vals   = array2Object($(this).serializeArray()),
+                    list   = $('#walletList'),
+                    status = $('#walletStatus');
+
+                // Reset wallet list, status field, and hide any previous errors
+                list.html('');
+                status.val('');
+                $('#error').hide();
+
+                // Limit wallet generation to 1000 wallets at a time
+                if(vals.walletCount > 1000){
+                    $('#error').show();
+                    $('#error').html('Error : Can only generate up to 1000 wallets');
+                    return false;
+                }
+
+                // Notify user of status and clear previous wallet list
+                status.val('Generating Wallets...');
+
+                // Delay the wallet generation for 100ms to allow status field to update
+                setTimeout(function(){
+                    for(var i=1; i<=vals.walletCount; i++){
+                        var info = createWallet(vals.network),
+                            passphrase = info[0],
+                            address    = info[1];
+                        list.append(i + ', ' + passphrase + ', ' + address + '<br>');
+                    }
+                    status.val(vals.walletCount + ' wallets generated');                    
+
+                }, 100);
+
+            });
+
+        });
+    </script>
+
+</body>
+</html>
